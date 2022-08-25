@@ -1,0 +1,218 @@
+VISUAL CODE-> EXTENSIONES
+Angular Snippets (Version 12)
+Bootstrap 5 Form Snippets
+Bootstrap 5 Quick Snippets
+Palenight Theme
+
+
+
+https://angular.io/cli
+npm install -g @angular/cli -> instalar angular
+ng --version  -> ejecutar proyecto
+
+
+npm install -g @angular/cli  ->instalar angular
+
+ng new empleados -> esqueleto
+
+ng serve  -> compilar el proyecto
+
+
+
+BOOTSTRAP
+
+bs5-navbar-minimal-a    ->Menu
+bs5-card-head-foot     -> pagina->bs5-table-default
+bs5-form-input   -> formulario '
+bs5=bgroun-default  -> button
+bs5-button-a -> borrar
+
+npm install bootstrap  ->instalar bootstrap
+
+angular.json -> styles ->dentro->"node_modules/bootstrap/dist/css/bootstrap.min.css"
+
+
+CREACION DE COMPONENTE
+
+ng g c component/add-employee --skip-tests  ->crear componente agregar
+ng g c component/edit-employee   ->crear componente editar
+ng g c component/list-employee   ->crear componente listar
+
+
+CREACION DE RUTAS
+importamos el componente -> definimos la rutas ->routes  ->app-routing.module.ts
+
+menu -> routerLink="add-employee"  ->app.component.html
+<router-outlet></router-outlet>    ->app.component.html
+
+
+
+1. TRABAJAR CON LOS FORMULARIOS DE FORMA REACTIVA ->INTEGRACION -> solicitudes
+               app.module.ts
+
+import {FormsModule, ReactiveFormsModule} from '@angular/forms';
+import{HttpClientModule} from '@angular/common/http';
+
+FormsModule       
+HttpClientModule      -> INTERACIONES CON LA Api
+app.module.ts ->> imports:[FormsModule, ReactiveFormsModule, HttpClientModule]
+
+2.FORMULARIO
+cramos el evento detro del form -> 
+<form [formGroup]="formEmpoyee" (ngSubmit)="enviarDatos()">
+luego obtenemos el dato de cada text colocando formControlName="nombre"
+
+3. RECECIONAR DATOS
+      add-empoyee.ts
+import {FormGroup, FormBuilder} from '@angular/forms'; -> Va ayudar a interatuar con el formulario 
+
+export class addEmpoyee --> ultilizamos los datos que van llegando del formulario
+formEmpoyee:FormsGroup;
+
+constructor(public formulario:FormBuilder) {
+    this.formEmpoyee=this.formulario.group({
+      nombre:[''],
+      correo:['']
+    })
+
+4.ALMACENAR LOS DATOS
+
+ngOnInit(): void{}
+enviarDatos(): any {
+  console.log(this.formEmpoyee.value);
+}
+
+
+CREACION DE SERVICIÓ
+ng g s service/crud
+
+1. MODELO PARA TENER ACCESO A LOS DATOS ->Empleado.ts -creamos
+
+2. crud.service.ts ->logica
+
+import {HttpClient} from '@angular/common/http'; ->interacion con la Api comuniccion con la Api para enviar información 
+import{Observable} from 'rxjs'      -> Observador va estar monitoreando que va estar pasando con la información en el entorno html 
+import {Emleado} from './Emleado';     -> obtener nuestro modelo Empleado - la estrutura que se va enviar
+
+3. interacion
+
+@Injectable({
+  providedI: 'root' 
+})
+exort class CrudService {
+Api: string='http://localhost/empleados'
+
+   constructor(private clienteHttp:HttpClient) {}
+   AddEmleado(datosEmpleado:Empleado):Observable<any>{
+      return this.clienteHttp.post(this.Api+"?insertar=1",datosEmpleado);
+    }
+}
+
+PARA TRABAJAR CON ESE SERVICIO
+1. import{crudService} from 'src/app/service/crud,service';  -> add-empoyee.comonent.ts
+2.   dentro de construtor --   private crudService:crudService  -> para que lo podamos ultilizar
+3. almacenamos los datos en la funcion 
+ngOnInit(): void{}
+enviarDatos(): any {
+  console.log(this.formEmpoyee.value);
+this.crudService.AgregarEmleado(this.formEmpoyee.value).subscribe(); ->ejecuta todo
+}
+
+
+REDIRECCIONAR ENTRE PAGINAS -> RUTAS
+
+1. import {Router} from '@angular/router';   -> add-empoyees.ts
+2. private ruteador:Router -> para ultilizarlo lo agregamos en el construtor
+3. this.ruteador.navigateByUrl('/list-empoyees')  -> agregamos en la funcion donde estemos enviando los datos
+
+
+CONSULTAR DATOS
+crud.service.ts
+1 ObtenerEmpoyees(){
+  return this.clienteHttp.get(this.Api);
+  }
+2. import {CrudService} from 'src/app/service/crud.service'; ->list-empoyees.ts
+3  expor class -- abajo 
+  Empoyees:any;   ->porque vamos a necesitar esa variable
+4 private crudService:CrudService   ->  agregamos en el construtor para poder ultilizarla
+5  Ultilizamos el crudService para obtener los empleados
+dentro ngOnInit(): void {
+    this.crudService.ObtenerEmpoyees().subscribe(result =>{console.log(result);
+    this.Empoyees =result;
+    });
+  }
+
+MOSTRAR DATOS EN EL ENTORNO DE HTML
+<tr *ngFor="let empoyee of Empoyees; let iControl=index">
+
+BORRAR DATOS
+1 <a  class="btn btn-danger" (click)="deleteRegistre(empoyee.id,iControl)" role="button">Borrar</a> 
+2  DeleteEmployees(id:any):Observable<any>{
+      return this.clienteHttp.get(this.Api+"?borrar"+id);
+    } -> crud.service.ts
+
+3. abajo donde termina ngOnInit()
+   deleteRegister(id:any,iControl:any){
+      this.crudService.deleteEmpoyee(id).subscribe((respuesta)=>{
+        this.Empoyee.splice(iControl,1);
+});
+}
+
+
+EDITAR DATOS
+1. edit-empoyee.ts
+import {FormGroup, FormBuilder} from '@angular/forms';
+import {CrudService} from  'src/app/service/crud.service';
+import { Router,ActivatedRoute } from '@angular/router';
+
+2. Creamos la variable ( elId ) abajo del expor 
+
+3.  ObtenerEmployee(id:any):Observable<any>{
+      return this.clienteHttp.get(this.Api+"?consultar="+id);
+    } -> la request que los va devolver los datos --> crud.service.ts
+4.private crudService:CrudService,
+    public formulario:FormBuilder,
+    private activedRoute:ActivatedRoute    -> dentro del construtor para poderlo ultilizar
+luego introduciomos private activeRoute:ActivatedRoute para poder ultilizarla
+dentro de LAS LLAVE DEL CONSTRUCTOR RECEPCIONAMOS EL ID   -> this.elID=activatedRoute.snapshot.paramMap.get('id');
+
+5. this.elID=this.activedRoute.snapshot.paramMap.get('id');
+     console.log(this.elID); -> dentro de las comillas del construtor, capturamos el parametro desde  la url
+6. this.crudService.ObtenerEmployee(this.elID).subscribe(result =>{
+      console.log(result);  -> enviamos el id a la funsion
+7.  this.formEmpoyee = this.formulario.group(
+      {
+        nombre:[''],
+        correo:['']
+      }
+    );  -> almacenamos los datos en el formulario
+
+8.this.crudService.ObtenerEmployee(this.elID).subscribe(result =>{
+      console.log(result);
+      this.formEmpoyee.setValue({
+        nombre:result[0]['nombre'],
+        correo:result[0]['correo']
+      });
+    }    -> introducimos el valor a cada input
+
+9. en el <form ( [formGroup]="formEmpoyee" ) y luego colocamos e identificador de cada input ( formControlName="nombre")
+
+ACTUALIZAR DATOS
+
+1. (ngSubmit)="enviarDatos() Y TIPO submit -> html
+2.UpdateEmployees(id:any,datosEmpleado:Empleado):Observable<any>{
+      return this.clienteHttp.post(this.Api+"?actualizar="+id,datosEmpleado);
+    }  -> servicio
+3.   this.formEmpoyee = this.formulario.group(
+      {
+        nombre:[''],
+        correo:['']
+      }
+    );  obtenemos los datos
+
+4. enviarDatos():any {
+    //console.log("Me precionaste")
+    console.log(this.formEmpoyee.value)
+    this.crudService.UpdateEmployees(this.elID,this.formEmpoyee.value).subscribe();
+    this.ruteador.navigateByUrl('/list-employee');
+  }  -> almacenamos los datos -> edit-empoyee.ts
